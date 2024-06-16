@@ -50,7 +50,7 @@ def call_openai_api(query, context, api_key):
 
 # 버튼 클릭시 API 호출
 if st.button("응답 받기"):
-    if not api_key:
+    if not API:
         st.error("API 키를 입력하세요.")
     elif not user_query:
         st.error("질문을 입력하세요.")
