@@ -7,7 +7,7 @@ def APIINPUT():
 APIINPUT()
 
 def load_data_from_github():
-    url = "https://raw.githubusercontent.com/your-username/your-repo/main/data.txt"
+    url = "https://github.com/hyunnn24/RAG-test/blob/main/data.txt"
     response = requests.get(url)
     if response.status_code == 200:
         return response.text.splitlines()
