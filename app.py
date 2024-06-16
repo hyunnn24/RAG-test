@@ -4,7 +4,7 @@ import requests
 
 # GitHub에서 data.txt 파일을 로드하는 함수
 def load_data_from_github():
-    url = "https://github.com/hyunnn24/RAG-test/blob/main/data.txt"
+    url = "https://raw.githubusercontent.com/hyunnn24/RAG-test/main/data.txt"
     response = requests.get(url)
     if response.status_code == 200:
         return response.text.splitlines()
@@ -29,20 +29,23 @@ user_query = st.text_input("질문을 입력하세요:")
 def search_documents(query, docs):
     return [doc for doc in docs if query.lower() in doc.lower()]
 
-# API 호출 함수
+# OpenAI API 호출 함수
 def call_openai_api(query, context, api_key):
     openai.api_key = api_key
     if context:
-        prompt = f"Context: {context}\n\nQuery: {query}\n\nAnswer:"
+        messages = [
+            {"role": "system", "content": "League of Legends 전문가입니다."},
+            {"role": "user", "content": f"Context: {context}\n\nQuery: {query}"}
+        ]
     else:
-        prompt = f"Query: {query}\n\nAnswer:"
+        messages = [
+            {"role": "system", "content": "League of Legends 전문가입니다."},
+            {"role": "user", "content": f"Query: {query}"}
+        ]
     
     response = openai.ChatCompletion.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": "You are a League of Legends expert."},
-            {"role": "user", "content": prompt}
-        ],
+        model="gpt-4-turbo",
+        messages=messages,
         max_tokens=150
     )
     return response['choices'][0]['message']['content'].strip()
@@ -58,12 +61,12 @@ if st.button("응답 받기"):
             # 문서 검색 단계
             relevant_docs = search_documents(user_query, documents)
             context = " ".join(relevant_docs)
-            
-            with st.spinner('OpenAI API 호출 중...'):
-                # 텍스트 생성 단계
-                try:
-                    answer = call_openai_api(user_query, context, api_key)
-                    st.write("응답:")
-                    st.write(answer)
-                except Exception as e:
-                    st.error(f"오류 발생: {e}")
+
+        with st.spinner('OpenAI API 호출 중...'):
+            # 텍스트 생성 단계
+            try:
+                answer = call_openai_api(user_query, context, api_key)
+                st.write("응답:")
+                st.write(answer)
+            except Exception as e:
+                st.error(f"오류 발생: {e}")
