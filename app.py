@@ -33,16 +33,22 @@ def search_documents(query, docs):
 def call_openai_api(query, context, api_key):
     openai.api_key = api_key
     if context:
-        prompt = f"Context: {context}\n\nQuery: {query}\n\nAnswer:"
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": f"Context: {context}\n\nQuery: {query}\n\nAnswer:"}
+        ]
     else:
-        prompt = f"Query: {query}\n\nAnswer:"
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": f"Query: {query}\n\nAnswer:"}
+        ]
     
-    response = openai.Completion.create(
-        model="gpt-3.5-turbo",  # 사용할 OpenAI 모델 엔진
-        prompt=prompt,
-        max_tokens=150  # 응답으로 받을 최대 토큰 수
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=messages,
+        max_tokens=150
     )
-    return response.choices[0].text.strip()
+    return response.choices[0].message['content'].strip()
 
 # 버튼 클릭시 API 호출
 if st.button("응답 받기"):
