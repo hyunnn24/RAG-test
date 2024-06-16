@@ -43,7 +43,7 @@ def call_openai_api(query, context, api_key):
             {"role": "user", "content": f"Query: {query}"}
         ]
     
-    response = openai.Completion.create(
+    response = client.chat.completions.create(
         model="gpt-4-turbo",
         messages=messages,
         max_tokens=150
