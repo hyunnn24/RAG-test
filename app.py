@@ -29,26 +29,21 @@ user_query = st.text_input("질문을 입력하세요:")
 def search_documents(query, docs):
     return [doc for doc in docs if query.lower() in doc.lower()]
 
-# API 호출 함수
+# API 호출 함수 (openai.Completion 대신 openai.CompletionResponse 사용)
 def call_openai_api(query, context, api_key):
     openai.api_key = api_key
     if context:
-        messages = [
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": f"Context: {context}\n\nQuery: {query}\n\nAnswer:"}
-        ]
+        prompt = f"Context: {context}\n\nQuery: {query}\n\nAnswer:"
     else:
-        messages = [
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": f"Query: {query}\n\nAnswer:"}
-        ]
-    
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=messages,
-        max_tokens=150
+        prompt = f"Query: {query}\n\nAnswer:"
+
+    # openai.Completion 대신 openai.CompletionResponse 사용
+    response = openai.CompletionResponse.create(
+        model="gpt-3.5-turbo",  # 사용할 OpenAI 모델 엔진
+        prompt=prompt,
+        max_tokens=150  # 응답으로 받을 최대 토큰 수
     )
-    return response.choices[0].message['content'].strip()
+    return response.choices[0].text.strip()
 
 # 버튼 클릭시 API 호출
 if st.button("응답 받기"):
@@ -61,12 +56,12 @@ if st.button("응답 받기"):
             # 문서 검색 단계
             relevant_docs = search_documents(user_query, documents)
             context = " ".join(relevant_docs)
-            
-            with st.spinner('OpenAI API 호출 중...'):
-                # 텍스트 생성 단계
-                try:
-                    answer = call_openai_api(user_query, context, api_key)
-                    st.write("응답:")
-                    st.write(answer)
-                except Exception as e:
-                    st.error(f"오류 발생: {e}")
+
+        with st.spinner('OpenAI API 호출 중...'):
+            # 텍스트 생성 단계
+            try:
+                answer = call_openai_api(user_query, context, api_key)
+                st.write("응답:")
+                st.write(answer)
+            except Exception as e:
+                st.error(f"오류 발생: {e}")
