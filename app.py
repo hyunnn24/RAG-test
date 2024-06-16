@@ -1,5 +1,5 @@
 import streamlit as st
-import openai
+from openai import OpenAI
 import requests
 
 # GitHub에서 data.txt 파일을 로드하는 함수
