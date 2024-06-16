@@ -38,7 +38,7 @@ def call_openai_api(query, context, api_key):
         prompt = f"Query: {query}\n\nAnswer:"
     
     response = openai.Completion.create(
-        engine="gpt-4o",  # 사용할 OpenAI 모델 엔진
+        engine="gpt-4",  # 사용할 OpenAI 모델 엔진
         prompt=prompt,
         max_tokens=150  # 응답으로 받을 최대 토큰 수
     )
@@ -62,5 +62,11 @@ if st.button("응답 받기"):
                     answer = call_openai_api(user_query, context, api_key)
                     st.write("응답:")
                     st.write(answer)
-                except openai.error.OpenAIError as e:
+                except openai.error.APIError as e:
                     st.error(f"OpenAI API 호출 중 오류 발생: {e}")
+                except openai.error.InvalidRequestError as e:
+                    st.error(f"잘못된 요청: {e}")
+                except openai.error.RateLimitError as e:
+                    st.error(f"요청 한도를 초과했습니다: {e}")
+                except Exception as e:
+                    st.error(f"알 수 없는 오류 발생: {e}")
