@@ -1,11 +1,8 @@
 import streamlit as st
 import openai
 import requests
-def APIINPUT():
-    st.header("API Key를 입력하세요")
-    API = st.text_input("API", type="password")
-APIINPUT()
 
+# GitHub에서 data.txt 파일을 로드하는 함수
 def load_data_from_github():
     url = "https://github.com/hyunnn24/RAG-test/blob/main/data.txt"
     response = requests.get(url)
@@ -22,8 +19,8 @@ documents = load_data_from_github()
 st.title('RAG 모델 데모')
 st.write("OpenAI API를 호출하여 응답을 받는 예제입니다.")
 
-
-
+# OpenAI API 키 입력 받기
+api_key = st.text_input("OpenAI API 키를 입력하세요:", type="password")
 
 # 사용자 입력 받기
 user_query = st.text_input("질문을 입력하세요:")
@@ -32,15 +29,12 @@ user_query = st.text_input("질문을 입력하세요:")
 def search_documents(query, docs):
     return [doc for doc in docs if query.lower() in doc.lower()]
 
-
-
-
 # API 호출 함수
 def call_openai_api(query, context, api_key):
-    openai.api_key = API
+    openai.api_key = api_key
     prompt = f"Context: {context}\n\nQuery: {query}\n\nAnswer:"
     response = openai.Completion.create(
-        engine="gpt-4o",  # 사용할 OpenAI 모델 엔진
+        engine="gpt-4",  # 사용할 OpenAI 모델 엔진
         prompt=prompt,
         max_tokens=150  # 응답으로 받을 최대 토큰 수
     )
@@ -48,9 +42,9 @@ def call_openai_api(query, context, api_key):
 
 # 버튼 클릭시 API 호출
 if st.button("응답 받기"):
-    '''if not openai.api_key:
-        st.error("API 키를 입력하세요.")'''
-    if not user_query:
+    if not api_key:
+        st.error("API 키를 입력하세요.")
+    elif not user_query:
         st.error("질문을 입력하세요.")
     else:
         with st.spinner('문서 검색 중...'):
