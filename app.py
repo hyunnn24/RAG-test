@@ -32,9 +32,7 @@ user_query = st.text_input("질문을 입력하세요:")
 def search_documents(query, docs):
     return [doc for doc in docs if query.lower() in doc.lower()]
 
-def APIINPUT():
-    st.header("API Key를 입력하세요")
-    API = st.text_input("API", type="password")
+
 
 
 # API 호출 함수
@@ -50,9 +48,9 @@ def call_openai_api(query, context, api_key):
 
 # 버튼 클릭시 API 호출
 if st.button("응답 받기"):
-    if not openai.api_key:
-        st.error("API 키를 입력하세요.")
-    elif not user_query:
+    '''if not openai.api_key:
+        st.error("API 키를 입력하세요.")'''
+    if not user_query:
         st.error("질문을 입력하세요.")
     else:
         with st.spinner('문서 검색 중...'):
