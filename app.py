@@ -46,7 +46,7 @@ def call_openai_api(query, context, api_key):
     response = openai.chat.completions.create(
         model="gpt-4-turbo",
         messages=messages,
-        max_tokens=150
+        max_tokens=1000
     )
     return response.choices[0].message.content
 
