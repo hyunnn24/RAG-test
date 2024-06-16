@@ -32,7 +32,11 @@ def search_documents(query, docs):
 # API 호출 함수
 def call_openai_api(query, context, api_key):
     openai.api_key = api_key
-    prompt = f"Context: {context}\n\nQuery: {query}\n\nAnswer:"
+    if context:
+        prompt = f"Context: {context}\n\nQuery: {query}\n\nAnswer:"
+    else:
+        prompt = f"Query: {query}\n\nAnswer:"
+    
     response = openai.Completion.create(
         engine="gpt-4o",  # 사용할 OpenAI 모델 엔진
         prompt=prompt,
@@ -52,14 +56,11 @@ if st.button("응답 받기"):
             relevant_docs = search_documents(user_query, documents)
             context = " ".join(relevant_docs)
             
-            if context:
-                with st.spinner('OpenAI API 호출 중...'):
-                    # 텍스트 생성 단계
-                    try:
-                        answer = call_openai_api(user_query, context, api_key)
-                        st.write("응답:")
-                        st.write(answer)
-                    except openai.error.OpenAIError as e:
-                        st.error(f"OpenAI API 호출 중 오류 발생: {e}")
-            else:
-                st.write("관련 문서를 찾을 수 없습니다.")
+            with st.spinner('OpenAI API 호출 중...'):
+                # 텍스트 생성 단계
+                try:
+                    answer = call_openai_api(user_query, context, api_key)
+                    st.write("응답:")
+                    st.write(answer)
+                except openai.error.OpenAIError as e:
+                    st.error(f"OpenAI API 호출 중 오류 발생: {e}")
