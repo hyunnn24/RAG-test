@@ -48,7 +48,7 @@ def call_openai_api(query, context, api_key):
         messages=messages,
         max_tokens=150
     )
-    return completion.choices[0].message.content
+    return response.choices[0].message.content
 
 # 버튼 클릭시 API 호출
 if st.button("응답 받기"):
