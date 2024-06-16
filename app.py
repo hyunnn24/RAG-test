@@ -1,32 +1,48 @@
 import streamlit as st
 import openai
+import requests
+def APIINPUT():
+    st.header("API Key를 입력하세요")
+    API = st.text_input("API", type="password")
+APIINPUT()
 
-# OpenAI API 키 설정
-openai.api_key = 'your-openai-api-key'
+def load_data_from_github():
+    url = "https://raw.githubusercontent.com/your-username/your-repo/main/data.txt"
+    response = requests.get(url)
+    if response.status_code == 200:
+        return response.text.splitlines()
+    else:
+        st.error("data.txt 파일을 로드하는 데 실패했습니다.")
+        return []
+
+# 데이터 로드
+documents = load_data_from_github()
 
 # Streamlit UI 구성
 st.title('RAG 모델 데모')
 st.write("OpenAI API를 호출하여 응답을 받는 예제입니다.")
 
-# 문서 저장소 (예시로 간단한 리스트를 사용)
-documents = [
-    "OpenAI는 인공지능 연구소입니다.",
-    "Streamlit은 데이터 과학을 위한 웹 애플리케이션 프레임워크입니다.",
-    "Python은 널리 사용되는 프로그래밍 언어입니다."
-]
+
+
 
 # 사용자 입력 받기
 user_query = st.text_input("질문을 입력하세요:")
 
 # 간단한 문서 검색 함수
-def search_documents(query):
-    return [doc for doc in documents if query.lower() in doc.lower()]
+def search_documents(query, docs):
+    return [doc for doc in docs if query.lower() in doc.lower()]
+
+def APIINPUT():
+    st.header("API Key를 입력하세요")
+    API = st.text_input("API", type="password")
+
 
 # API 호출 함수
-def call_openai_api(query, context):
+def call_openai_api(query, context, api_key):
+    openai.api_key = API
     prompt = f"Context: {context}\n\nQuery: {query}\n\nAnswer:"
     response = openai.Completion.create(
-        engine="text-davinci-003",  # 사용할 OpenAI 모델 엔진
+        engine="gpt-4o",  # 사용할 OpenAI 모델 엔진
         prompt=prompt,
         max_tokens=150  # 응답으로 받을 최대 토큰 수
     )
@@ -34,19 +50,24 @@ def call_openai_api(query, context):
 
 # 버튼 클릭시 API 호출
 if st.button("응답 받기"):
-    if user_query:
+    if not api_key:
+        st.error("API 키를 입력하세요.")
+    elif not user_query:
+        st.error("질문을 입력하세요.")
+    else:
         with st.spinner('문서 검색 중...'):
             # 문서 검색 단계
-            relevant_docs = search_documents(user_query)
+            relevant_docs = search_documents(user_query, documents)
             context = " ".join(relevant_docs)
             
             if context:
                 with st.spinner('OpenAI API 호출 중...'):
                     # 텍스트 생성 단계
-                    answer = call_openai_api(user_query, context)
-                    st.write("응답:")
-                    st.write(answer)
+                    try:
+                        answer = call_openai_api(user_query, context, api_key)
+                        st.write("응답:")
+                        st.write(answer)
+                    except openai.error.OpenAIError as e:
+                        st.error(f"OpenAI API 호출 중 오류 발생: {e}")
             else:
                 st.write("관련 문서를 찾을 수 없습니다.")
-    else:
-        st.write("질문을 입력하세요.")
