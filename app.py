@@ -38,14 +38,14 @@ def call_openai_api(query, context, api_key):
         prompt = f"Query: {query}\n\nAnswer:"
     
     response = openai.ChatCompletion.create(
-        model="gpt-4-turbo",  # 사용할 OpenAI 모델 엔진
+        model="gpt-4o",
         messages=[
-            {"role": "system", "content": "league of legend expert."},
+            {"role": "system", "content": "You are a League of Legends expert."},
             {"role": "user", "content": prompt}
         ],
-        max_tokens=150  # 응답으로 받을 최대 토큰 수
+        max_tokens=150
     )
-    return response.choices[0].message['content'].strip()
+    return response['choices'][0]['message']['content'].strip()
 
 # 버튼 클릭시 API 호출
 if st.button("응답 받기"):
