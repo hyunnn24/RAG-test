@@ -4,7 +4,7 @@ import requests
 
 # GitHub에서 data.txt 파일을 로드하는 함수
 def load_data_from_github():
-    url = "https://github.com/hyunnn24/RAG-test/blob/main/data.txt"
+    url = "https://raw.githubusercontent.com/hyunnn24/RAG-test/main/data.txt"
     response = requests.get(url)
     if response.status_code == 200:
         return response.text.splitlines()
@@ -37,12 +37,15 @@ def call_openai_api(query, context, api_key):
     else:
         prompt = f"Query: {query}\n\nAnswer:"
     
-    response = openai.Completion.create(
-        engine="gpt-4o",  # 사용할 OpenAI 모델 엔진
-        prompt=prompt,
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",  # 사용할 OpenAI 모델 엔진
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": prompt}
+        ],
         max_tokens=150  # 응답으로 받을 최대 토큰 수
     )
-    return response.choices[0].text.strip()
+    return response.choices[0].message['content'].strip()
 
 # 버튼 클릭시 API 호출
 if st.button("응답 받기"):
@@ -62,11 +65,5 @@ if st.button("응답 받기"):
                     answer = call_openai_api(user_query, context, api_key)
                     st.write("응답:")
                     st.write(answer)
-                except openai.error.APIError as e:
-                    st.error(f"OpenAI API 호출 중 오류 발생: {e}")
-                except openai.error.InvalidRequestError as e:
-                    st.error(f"잘못된 요청: {e}")
-                except openai.error.RateLimitError as e:
-                    st.error(f"요청 한도를 초과했습니다: {e}")
                 except Exception as e:
-                    st.error(f"알 수 없는 오류 발생: {e}")
+                    st.error(f"오류 발생: {e}")
