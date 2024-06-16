@@ -1,5 +1,5 @@
 import streamlit as st
-import openai
+from openai import OpenAI
 import requests
 
 # GitHub에서 data.txt 파일을 로드하는 함수
@@ -29,21 +29,21 @@ user_query = st.text_input("질문을 입력하세요:")
 def search_documents(query, docs):
     return [doc for doc in docs if query.lower() in doc.lower()]
 
-# API 호출 함수
+# API 호출 함수 (openai.Completion 대신 OpenAI Chat API 사용)
 def call_openai_api(query, context, api_key):
     openai.api_key = api_key
     if context:
         prompt = f"Context: {context}\n\nQuery: {query}\n\nAnswer:"
     else:
         prompt = f"Query: {query}\n\nAnswer:"
-    
-    response = openai.ChatCompletion.create(
-        model="gpt-4-turbo",  # 사용할 OpenAI 모델 엔진
+
+    client = OpenAI(api_key=api_key)
+    response = client.chat.completions.create(
+        model="gpt-4o",
         messages=[
-            {"role": "system", "content": "league of legend expert."},
+            {"role": "system", "content": "League of Legends 전문가입니다."},
             {"role": "user", "content": prompt}
-        ],
-        max_tokens=150  # 응답으로 받을 최대 토큰 수
+        ]
     )
     return response.choices[0].text.strip()
 
@@ -58,12 +58,12 @@ if st.button("응답 받기"):
             # 문서 검색 단계
             relevant_docs = search_documents(user_query, documents)
             context = " ".join(relevant_docs)
-            
-            with st.spinner('OpenAI API 호출 중...'):
-                # 텍스트 생성 단계
-                try:
-                    answer = call_openai_api(user_query, context, api_key)
-                    st.write("응답:")
-                    st.write(answer)
-                except Exception as e:
-                    st.error(f"오류 발생: {e}")
+
+        with st.spinner('OpenAI API 호출 중...'):
+            # 텍스트 생성 단계
+            try:
+                answer = call_openai_api(user_query, context, api_key)
+                st.write("응답:")
+                st.write(answer)
+            except Exception as e:
+                st.error(f"오류 발생: {e}")
