@@ -37,15 +37,12 @@ def call_openai_api(query, context, api_key):
     else:
         prompt = f"Query: {query}\n\nAnswer:"
     
-    response = openai.ChatCompletion.create(
+    response = openai.Completion.create(
         model="gpt-3.5-turbo",  # 사용할 OpenAI 모델 엔진
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": prompt}
-        ],
+        prompt=prompt,
         max_tokens=150  # 응답으로 받을 최대 토큰 수
     )
-    return response.choices[0].message['content'].strip()
+    return response.choices[0].text.strip()
 
 # 버튼 클릭시 API 호출
 if st.button("응답 받기"):
