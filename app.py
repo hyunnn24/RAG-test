@@ -38,7 +38,7 @@ def call_openai_api(query, context, api_key):
         prompt = f"Query: {query}\n\nAnswer:"
     
     response = openai.Completion.create(
-        engine="gpt-4",  # 사용할 OpenAI 모델 엔진
+        engine="gpt-4o",  # 사용할 OpenAI 모델 엔진
         prompt=prompt,
         max_tokens=150  # 응답으로 받을 최대 토큰 수
     )
