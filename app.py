@@ -37,7 +37,7 @@ def call_openai_api(query, context, api_key):
     else:
         prompt = f"Query: {query}\n\nAnswer:"
 
-    # openai.Completion 대신 openai.CompletionResponse 사용
+    client = OpenAI(api_key=api_key)
     response = client.chat.completions.create(
             model="gpt-4o",
             messages=[
