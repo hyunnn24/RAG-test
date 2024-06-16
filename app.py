@@ -38,11 +38,13 @@ def call_openai_api(query, context, api_key):
         prompt = f"Query: {query}\n\nAnswer:"
 
     # openai.Completion 대신 openai.CompletionResponse 사용
-    response = openai.CompletionResponse.create(
-        model="gpt-3.5-turbo",  # 사용할 OpenAI 모델 엔진
-        prompt=prompt,
-        max_tokens=150  # 응답으로 받을 최대 토큰 수
-    )
+    response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "league of legend expert."},
+                {"role": "user", "content": prompt}
+            ]
+        )
     return response.choices[0].text.strip()
 
 # 버튼 클릭시 API 호출
