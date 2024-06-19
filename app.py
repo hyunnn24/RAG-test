@@ -1,72 +1,76 @@
+import openai 
 import streamlit as st
-import openai
+from bs4 import BeautifulSoup
 import requests
+from openai import OpenAI
 
-# GitHub에서 data.txt 파일을 로드하는 함수
-def load_data_from_github():
-    url = "https://raw.githubusercontent.com/hyunnn24/RAG-test/main/data.txt"
-    response = requests.get(url)
-    if response.status_code == 200:
-        return response.text.splitlines()
-    else:
-        st.error("data.txt 파일을 로드하는 데 실패했습니다.")
-        return []
+api = st.text_input('Enter your OpenAI API key:', type='password')
 
-# 데이터 로드
-documents = load_data_from_github()
+if api:
+    client = OpenAI(api_key=api)
+userinput= st.text_input('픽입력:')
 
-# Streamlit UI 구성
-st.title('RAG 모델 데모')
-st.write("OpenAI API를 호출하여 응답을 받는 예제입니다.")
+def download_and_save(url, filename):
+  r = requests.get(url)
+  soup = BeautifulSoup(r.text, 'html.parser')
+  text = soup.get_text(separator=' ', strip=True)
+  with open(filename,'w') as fo:
+    fo.write(text)
 
-# OpenAI API 키 입력 받기
-api_key = st.text_input("OpenAI API 키를 입력하세요:", type="password")
+github_url = "https://github.com/hyunnn24/RAG-test/blob/main/data.txt"
+url = github_url.replace("/blob/", "/raw/")
+filename = 'data.txt'
 
-# 사용자 입력 받기
-user_query = st.text_input("질문을 입력하세요:")
+download_and_save(url, filename)
 
-# 간단한 문서 검색 함수
-def search_documents(query, docs):
-    return [doc for doc in docs if query.lower() in doc.lower()]
+with open(filename) as fi:
+  text = fi.read()
 
-# OpenAI API 호출 함수
-def call_openai_api(query, context, api_key):
-    openai.api_key = api_key
-    if context:
-        messages = [
-            {"role": "system", "content": "League of Legends 전문가입니다."},
-            {"role": "user", "content": f"Context: {context}\n\nQuery: {query}"}
-        ]
-    else:
-        messages = [
-            {"role": "system", "content": "League of Legends 전문가입니다."},
-            {"role": "user", "content": f"Query: {query}"}
-        ]
-    
-    response = openai.chat.completions.create(
-        model="gpt-4-turbo",
-        messages=messages,
-        max_tokens=1000
+# st.write(text) TEST
+if api:
+  vector_store = client.beta.vector_stores.create(name="Bottom pick")
+
+if api:
+  assistant = client.beta.assistants.create(
+    name="LOL Pick Assistant",
+    instructions="문서를 참조하여 (챔피언1의 카운터는 ~입니다 추천조합은~입니다 그 이유는~입니다 챔피언1의 카운터는 ~입니다 추천조합은~입니다 그 이유는~입니다)의 형식만으로 답변하고 카운터와 조합은 문서에서 이유는 직접 생각해서 알려줘 한국어로 답해",
+    model="gpt-4o",
+    tools=[{"type": "file_search"}],
+    tool_resources={
+        "file_search":{
+            "vector_store_ids": [vector_store.id]
+        }
+    }  
+  )
+
+
+
+  file_paths = [filename]
+
+  file_streams = [open(path, "rb") for path in file_paths]
+
+  file_batch = client.beta.vector_stores.file_batches.upload_and_poll(
+  vector_store_id=vector_store.id,
+  files=file_streams
+  )
+  if userinput:
+    thread = client.beta.threads.create(
+      messages=[
+        {
+          "role": "user",
+          "content": userinput,
+          #"attachments": [{"file_id": message_file.id, "tools":[{"type":"file_search"}]]
+        }
+      ]
     )
-    return response.choices[0].message.content
-
-# 버튼 클릭시 API 호출
-if st.button("응답 받기"):
-    if not api_key:
-        st.error("API 키를 입력하세요.")
-    elif not user_query:
-        st.error("질문을 입력하세요.")
-    else:
-        with st.spinner('문서 검색 중...'):
-            # 문서 검색 단계
-            relevant_docs = search_documents(user_query, documents)
-            context = " ".join(relevant_docs)
-
-        with st.spinner('OpenAI API 호출 중...'):
-            # 텍스트 생성 단계
-            try:
-                answer = call_openai_api(user_query, context, api_key)
-                st.write("응답:")
-                st.write(answer)
-            except Exception as e:
-                st.error(f"오류 발생: {e}")
+    #thread
+    run = client.beta.threads.runs.create_and_poll(
+        thread_id=thread.id,
+        assistant_id=assistant.id
+    )
+    #run
+    thread_messages = client.beta.threads.messages.list(thread.id, run_id=run.id)
+    #thread_messages
+    for msg in thread_messages.data:
+      st.write(f"{msg.role}: {msg.content[0].text.value}")
+      print(f"{msg.role}: {msg.content[0].text.value}")
